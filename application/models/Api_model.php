@@ -17,9 +17,9 @@ class Api_model extends CI_Model
         $c=$query->num_rows(); 
         if($c>0){            
             if($query->result()[0]->login_status == 0){
-                $status     =   ['login_status' => 1];
-                $this->db->where('usrId',$query->result()[0]->usrId);
-                $this->db->update('users',$status);
+                // $status     =   ['login_status' => 1];
+                // $this->db->where('usrId',$query->result()[0]->usrId);
+                // $this->db->update('users',$status);
                 //return true;
                 return 1;
             }
