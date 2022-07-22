@@ -1,0 +1,538 @@
+<div class="wrapper" ng-controller="leaveCtrl">
+
+<?php $this->load->view('include/header_menu'); ?>
+  <!-- Full Width Column -->
+  <div class="content-wrapper">
+    <div class="container">
+      <!-- Content Header (Page header) -->
+      <section class="content-header">
+        <h1>
+          Leave Request
+          <small>Management</small>
+        </h1>
+        <ol class="breadcrumb">
+          <li><a href="<?php echo base_url();?>"><i class="fa fa-dashboard"></i> Home</a></li>
+          <li class="active">Leave Request Management</li>
+        </ol>
+      </section>
+
+      <!-- Main content -->
+      <section class="content">
+
+
+        <div class="row">
+          <!-- /.col -->
+          <div class="col-md-12">
+            <div class="nav-tabs-custom">
+              <ul class="nav nav-tabs">
+                <li class="active"><a href="/#pendingrequest" data-toggle="tab">Pending Request</a></li>
+                <li><a href="/#acceptedrequest" data-toggle="tab">Accepted Request</a></li>
+                <li><a href="/#rejectedrequest" data-toggle="tab">Rejected Request</a></li>
+              </ul>
+              <div class="tab-content">
+                <!-- /.tab-pane -->
+                <div class="active tab-pane" id="pendingrequest">
+                  <div class="row">
+
+                    <div class="col-md-12">
+
+                      <div class="box box-primary" style="padding-left:0px; padding-right:0px; border-top-color: #FFFFFF;">
+                        <div class="box-header with-border">
+
+                          <div class="box-title">
+                            <div class="input-group input-group-sm" style="width: 250px;">
+                              <input type="text" ng-model="search" class="form-control" placeholder="Search">
+
+                              <div class="input-group-btn">
+                                <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="box-title pull-right" style="margin-right: 5px;">
+                            <a ng-click="refreshPendingTable()"><button type="button" class="btn btn-block btn-primary" title="Refresh Table"><i class="fa fa-refresh"> </i></button></a>
+                          </div>
+                        </div>
+                        <!-- /.box-header -->
+                        <div class="box-body table-responsive no-padding">
+                        <table class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th ng-click="sort('plreqId')">Id
+                                <span class="glyphicon sort-icon" ng-show="sortKey=='plreqId'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                              </th>
+                              <th ng-click="sort('plreqUserName')">Username
+                                <span class="glyphicon sort-icon" ng-show="sortKey=='plreqUserName'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                              </th>
+                              <th ng-click="sort('plreqSubject')">Subject
+                                <span class="glyphicon sort-icon" ng-show="sortKey=='plreqSubject'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                              </th>
+                              <th ng-click="sort('plreqDescription')">Description
+                                <span class="glyphicon sort-icon" ng-show="sortKey=='plreqDescription'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                              </th>
+                              <th ng-click="sort('plreqStatus')">Status
+                                <span class="glyphicon sort-icon" ng-show="sortKey=='plreqStatus'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                              </th>
+                              <th class="pull-right" >Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr dir-paginate="plrequest in plrequests|orderBy:sortKey:reverse|filter:search|itemsPerPage:5">
+                              <td>{{plrequest.plreqId}}</td>
+                              <td>{{plrequest.plreqUserName}}</td>
+                              <td>{{plrequest.plreqSubject}}</td>
+                              <td>{{plrequest.plreqDescription}}</td>
+                              <td>{{plrequest.plreqStatus}}</td>
+                              <td class="pull-right">
+                                <a class="btn btn-social-icon btn-danger" data-toggle="modal" data-target=".modal-view-details" ng-click="viewPendingRequest(plrequest)" title="View Details"><i class="fa fa-eye"></i></a>
+                                <a class="btn btn-social-icon btn-danger" data-toggle="modal" data-target=".modal-update-accept-request" ng-click="acceptPendingRequest(plrequest)" title="Accept"><i class="fa fa-check"></i></a>
+                                <a class="btn btn-social-icon btn-danger" data-toggle="modal" data-target=".modal-update-reject-request" ng-click="rejectPendingRequest(plrequest)" title="Reject"><i class="fa fa-close"></i></a>
+                              </td>
+                            </tr>
+                          </tbody>
+                          </table>
+                          </div>
+
+                          <div ng-if="dataloading" class="row" align="center">
+                            <div class="row">
+                              <img src="<?php echo base_url();?>assets/dist/img/boxc.gif"> 
+                            </div>
+                          </div>
+
+                          <dir-pagination-controls
+                            max-size="5"
+                            direction-links="true"
+                            boundary-links="true" >
+                          </dir-pagination-controls>
+                      </div>
+
+
+
+                    </div>
+
+                  </div>
+                </div>
+
+                <div class="tab-pane" id="acceptedrequest">
+                  <div class="row">
+
+                    <div class="col-md-12">
+
+                      <div class="box box-primary" style="padding-left:0px; padding-right:0px; border-top-color: #FFFFFF;">
+                        <div class="box-header with-border">
+
+                          <div class="box-title">
+                            <div class="input-group input-group-sm" style="width: 250px;">
+                              <input type="text" ng-model="search" class="form-control" placeholder="Search">
+
+                              <div class="input-group-btn">
+                                <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="box-title pull-right" style="margin-right: 5px;">
+                            <a ng-click="refreshAcceptedTable()"><button type="button" class="btn btn-block btn-primary" title="Refresh Table"><i class="fa fa-refresh"> </i></button></a>
+                          </div>
+                        </div>
+                        <!-- /.box-header -->
+                        <div class="box-body table-responsive no-padding">
+                        <table class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th ng-click="sort('alreqId')">Id
+                                <span class="glyphicon sort-icon" ng-show="sortKey=='alreqId'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                              </th>
+                              <th ng-click="sort('alreqUserName')">Username
+                                <span class="glyphicon sort-icon" ng-show="sortKey=='alreqUserName'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                              </th>
+                              <th ng-click="sort('alreqSubject')">Subject
+                                <span class="glyphicon sort-icon" ng-show="sortKey=='alreqSubject'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                              </th>
+                              <th ng-click="sort('alreqDescription')">Description
+                                <span class="glyphicon sort-icon" ng-show="sortKey=='alreqDescription'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                              </th>
+                              <th ng-click="sort('alreqStatus')">Status
+                                <span class="glyphicon sort-icon" ng-show="sortKey=='alreqStatus'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                              </th>
+                              <th class="pull-right" >Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr dir-paginate="alrequest in alrequests|orderBy:sortKey:reverse|filter:search|itemsPerPage:5">
+                              <td>{{alrequest.alreqId}}</td>
+                              <td>{{alrequest.alreqUserName}}</td>
+                              <td>{{alrequest.alreqSubject}}</td>
+                              <td>{{alrequest.alreqDescription}}</td>
+                              <td>{{alrequest.alreqStatus}}</td>
+                              <td class="pull-right">
+                                <a class="btn btn-social-icon btn-danger" data-toggle="modal" data-target=".modal-accepted-view-details" ng-click="viewAcceptedRequest(alrequest)" title="View Details"><i class="fa fa-eye"></i></a>
+                              </td>
+                            </tr>
+                          </tbody>
+                          </table>
+                          </div>
+
+                          <div ng-if="dataloading" class="row" align="center">
+                            <div class="row">
+                              <img src="<?php echo base_url();?>assets/dist/img/boxc.gif"> 
+                            </div>
+                          </div>
+
+                          <dir-pagination-controls
+                            max-size="5"
+                            direction-links="true"
+                            boundary-links="true" >
+                          </dir-pagination-controls>
+                      </div>
+
+                    </div>
+
+                  </div>
+                </div>
+
+                <div class="tab-pane" id="rejectedrequest">
+                  <div class="row">
+
+                    <div class="col-md-12">
+
+                      <div class="box box-primary" style="padding-left:0px; padding-right:0px; border-top-color: #FFFFFF;">
+                        <div class="box-header with-border">
+
+                          <div class="box-title">
+                            <div class="input-group input-group-sm" style="width: 250px;">
+                              <input type="text" ng-model="search" class="form-control" placeholder="Search">
+
+                              <div class="input-group-btn">
+                                <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="box-title pull-right" style="margin-right: 5px;">
+                            <a ng-click="refreshRejectedTable()"><button type="button" class="btn btn-block btn-primary" title="Refresh Table"><i class="fa fa-refresh"> </i></button></a>
+                          </div>
+                        </div>
+                        <!-- /.box-header -->
+                        <div class="box-body table-responsive no-padding">
+                        <table class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th ng-click="sort('rlreqId')">Id
+                                <span class="glyphicon sort-icon" ng-show="sortKey=='rlreqId'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                              </th>
+                              <th ng-click="sort('rlreqUserName')">Username
+                                <span class="glyphicon sort-icon" ng-show="sortKey=='rlreqUserName'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                              </th>
+                              <th ng-click="sort('rlreqSubject')">Subject
+                                <span class="glyphicon sort-icon" ng-show="sortKey=='rlreqSubject'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                              </th>
+                              <th ng-click="sort('rlreqDescription')">Description
+                                <span class="glyphicon sort-icon" ng-show="sortKey=='rlreqDescription'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                              </th>
+                              <th ng-click="sort('rlreqStatus')">Status
+                                <span class="glyphicon sort-icon" ng-show="sortKey=='rlreqStatus'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                              </th>
+                              <th class="pull-right" >Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr dir-paginate="rlrequest in rlrequests|orderBy:sortKey:reverse|filter:search|itemsPerPage:5">
+                              <td>{{rlrequest.rlreqId}}</td>
+                              <td>{{rlrequest.rlreqUserName}}</td>
+                              <td>{{rlrequest.rlreqSubject}}</td>
+                              <td>{{rlrequest.rlreqDescription}}</td>
+                              <td>{{rlrequest.rlreqStatus}}</td>
+                              <td class="pull-right">
+                                <a class="btn btn-social-icon btn-danger" data-toggle="modal" data-target=".modal-rejected-view-details" ng-click="viewRejectedRequest(rlrequest)" title="View Details"><i class="fa fa-eye"></i></a>
+                              </td>
+                            </tr>
+                          </tbody>
+                          </table>
+                          </div>
+
+                          <div ng-if="dataloading" class="row" align="center">
+                            <div class="row">
+                              <img src="<?php echo base_url();?>assets/dist/img/boxc.gif"> 
+                            </div>
+                          </div>
+
+                          <dir-pagination-controls
+                            max-size="5"
+                            direction-links="true"
+                            boundary-links="true" >
+                          </dir-pagination-controls>
+                      </div>
+
+                    </div>
+
+                  </div>
+                </div>
+
+
+              </div>
+
+                <!-- /.tab-pane -->
+            </div>
+              <!-- /.tab-content -->
+          </div>
+            <!-- /.nav-tabs-custom -->
+        </div>
+
+      </section>
+      <!-- /.content -->
+    </div>
+    <!-- /.container -->
+  </div>
+  <!-- /.content-wrapper -->
+  <?php $this->load->view('include/footer'); ?>
+
+  <div class="modal modal-update-accept-request">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Accept Leave Request</h4>
+        </div>
+        <div class="modal-body">
+
+          <form name="updateAcceptForm" novalidate>
+            <div class="box-body">
+
+            <div class="row col-md-12" style="margin-bottom: 10px;">
+               <fieldset class="col-md-12" style="border: 1px solid black; padding-bottom: 10px;">
+                <legend style="width: 200px; border-bottom: 0px; margin-bottom: 10px; text-align: center;"> Leave Request Details </legend>
+                <div class="row">
+                  <div class="col-md-3"><strong>Username : </strong></div>
+                  <div class="col-md-9">{{acceptActiveRequest.plreqUserName}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3"><strong>Subject : </strong></div>
+                  <div class="col-md-9">{{acceptActiveRequest.plreqSubject}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3"><strong>Details : </strong></div>
+                  <div class="col-md-9">{{acceptActiveRequest.plreqDescription}}</div>
+                </div>
+               </fieldset>
+            </div>
+
+            <div class="row col-md-12">
+              <div class="form-group" style="margin-top: 20px;">
+                <label for="acceptMessage">Accept Message*</label>
+                <input type="text" class="form-control" ng-model="acceptMessage" name="acceptMessage" placeholder="Accept Message" required>
+                <span style="color:red;" ng-show="updateAcceptForm.acceptMessage.$dirty && updateAcceptForm.acceptMessage.$invalid">
+                  <span ng-show="updateAcceptForm.acceptMessage.$error.required">Accept Message is required</span>
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </form>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" ng-click="updateAcceptRequest()" ng-disabled="updateAcceptForm.$invalid">Update</button>
+        </div>
+      </div>
+      <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+  </div>
+  <!-- /.modal -->
+
+
+  <div class="modal modal-update-reject-request">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Reject Leave Request</h4>
+        </div>
+        <div class="modal-body">
+
+          <form name="updateRejectForm" novalidate>
+            <div class="box-body">
+
+            <div class="row col-md-12" style="margin-bottom: 10px;">
+               <fieldset class="col-md-12" style="border: 1px solid black; padding-bottom: 10px;">
+                <legend style="width: 200px; border-bottom: 0px; margin-bottom: 10px; text-align: center;"> Leave Request Details </legend>
+                <div class="row">
+                  <div class="col-md-3"><strong>Username : </strong></div>
+                  <div class="col-md-9">{{rejectActiveRequest.plreqUserName}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3"><strong>Subject : </strong></div>
+                  <div class="col-md-9">{{rejectActiveRequest.plreqSubject}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3"><strong>Details : </strong></div>
+                  <div class="col-md-9">{{rejectActiveRequest.plreqDescription}}</div>
+                </div>
+               </fieldset>
+            </div>
+
+            <div class="row col-md-12">
+              <div class="form-group" style="margin-top: 20px;">
+                <label for="rejectMessage">Reject Message*</label>
+                <input type="text" class="form-control" ng-model="rejectMessage" name="rejectMessage" placeholder="Reject Message" required>
+                <span style="color:red;" ng-show="updateRejectForm.rejectMessage.$dirty && updateRejectForm.rejectMessage.$invalid">
+                  <span ng-show="updateRejectForm.rejectMessage.$error.required">Reject Message is required</span>
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </form>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" ng-click="updateRejectRequest()" ng-disabled="updateRejectForm.$invalid">Update</button>
+        </div>
+      </div>
+      <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+  </div>
+  <!-- /.modal -->
+
+
+
+
+  <div class="modal modal-view-details">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">View Leave Request Details</h4>
+        </div>
+        <div class="modal-body">
+
+            <div class="box-body">
+
+            <div class="row col-md-12" style="margin-bottom: 10px;">
+               <fieldset class="col-md-12" style="border: 1px solid black; padding-bottom: 10px;">
+                <legend style="width: 200px; border-bottom: 0px; margin-bottom: 10px; text-align: center;"> Leave Request Details </legend>
+                <div class="row">
+                  <div class="col-md-3"><strong>Username : </strong></div>
+                  <div class="col-md-9">{{activeRequest.plreqUserName}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3"><strong>Subject : </strong></div>
+                  <div class="col-md-9">{{activeRequest.plreqSubject}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3"><strong>Details : </strong></div>
+                  <div class="col-md-9">{{activeRequest.plreqDescription}}</div>
+                </div>
+               </fieldset>
+            </div>
+
+          </div>
+
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary pull-right" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+      <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+  </div>
+  <!-- /.modal -->
+
+    <div class="modal modal-accepted-view-details">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">View Leave Request Details</h4>
+        </div>
+        <div class="modal-body">
+
+            <div class="box-body">
+
+            <div class="row col-md-12" style="margin-bottom: 10px;">
+               <fieldset class="col-md-12" style="border: 1px solid black; padding-bottom: 10px;">
+                <legend style="width: 200px; border-bottom: 0px; margin-bottom: 10px; text-align: center;"> Leave Request Details </legend>
+                <div class="row">
+                  <div class="col-md-3"><strong>Username : </strong></div>
+                  <div class="col-md-9">{{activeAcceptedRequest.alreqUserName}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3"><strong>Subject : </strong></div>
+                  <div class="col-md-9">{{activeAcceptedRequest.alreqSubject}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3"><strong>Details : </strong></div>
+                  <div class="col-md-9">{{activeAcceptedRequest.alreqDescription}}</div>
+                </div>
+               </fieldset>
+            </div>
+
+          </div>
+
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary pull-right" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+      <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+  </div>
+  <!-- /.modal -->
+
+
+
+    <div class="modal modal-rejected-view-details">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">View Leave Request Details</h4>
+        </div>
+        <div class="modal-body">
+
+            <div class="box-body">
+
+            <div class="row col-md-12" style="margin-bottom: 10px;">
+               <fieldset class="col-md-12" style="border: 1px solid black; padding-bottom: 10px;">
+                <legend style="width: 200px; border-bottom: 0px; margin-bottom: 10px; text-align: center;"> Leave Request Details </legend>
+                <div class="row">
+                  <div class="col-md-3"><strong>Username : </strong></div>
+                  <div class="col-md-9">{{activeRejectedRequest.rlreqUserName}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3"><strong>Subject : </strong></div>
+                  <div class="col-md-9">{{activeRejectedRequest.rlreqSubject}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3"><strong>Details : </strong></div>
+                  <div class="col-md-9">{{activeRejectedRequest.rlreqDescription}}</div>
+                </div>
+               </fieldset>
+            </div>
+
+          </div>
+
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary pull-right" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+      <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+  </div>
+  <!-- /.modal -->
+
+</div>
+<!-- ./wrapper -->

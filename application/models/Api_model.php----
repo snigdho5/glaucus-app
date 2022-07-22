@@ -1,0 +1,671 @@
+<?php
+
+ 
+class Api_model extends CI_Model
+{
+    function __construct()
+    {
+        parent::__construct();
+    }
+
+
+    public function get_user_login($params)
+    {
+        $this->db->where('usrUserName',$params['usrUserName']);
+        $this->db->where('usrPassword',$params['usrPassword']);
+        $this->db->where('usrTypeName','appuser');
+        $query=$this->db->get('users');
+        $c=$query->num_rows(); 
+        if($c>0){
+            return true;
+        }
+        else{
+            return false; 
+        }
+    }
+
+
+    public function authenticate_user($params)
+    {
+        $this->db->where('usrId',$params['usrId']);
+        $query=$this->db->get('users');
+        $c=$query->num_rows(); 
+        if($c>0){
+            return true;
+        }
+        else{
+            return false; 
+        }
+    }
+
+
+    public function check_user_login($params)
+    {
+        $this->db->where('usrStatus',$params['usrStatus']);
+        $this->db->where('usrUserName',$params['usrUserName']);
+        $query=$this->db->get('users');
+        $c=$query->num_rows(); 
+        if($c>0){
+            return true;
+        }
+        else{
+            return false; 
+        }
+    }
+
+
+    public function get_user_data($params)
+    {
+        return $this->db->get_where('users',$params)->row_array();
+    }
+
+    public function get_user_data_by_id($id)
+    {
+        $this->db->select('*');
+        $this->db->from('users');
+        $this->db->where('usrId',$id);
+        $query=$this->db->get();
+        return $query->row_array();
+    }
+
+
+    public function add_login_record($params)
+    {
+        $this->db->insert('login_records',$params);
+        return $this->db->insert_id();
+    }
+
+
+    public function get_all_meetings($params)
+    {
+        $this->db->select('*, parent.usrUserName parentName, user.usrUserName userName');
+        $this->db->from('meetings');
+        $this->db->like('mtnParentPath', $params['usrParentPath'], 'after');
+        $this->db->join('customers', 'customers.cusId = meetings.mtnCustomerId');
+        $this->db->join('users as user', 'user.usrId = meetings.mtnUserId');
+        $this->db->join('users as parent', 'parent.usrId = meetings.mtnParentId');
+        $this->db->where('meetings.mtnUserId',$params['usrId']);
+        $this->db->where('meetings.mtnCompleted','no');
+        $this->db->order_by('meetings.mtnDate desc, meetings.mtnTime desc');
+        $query=$this->db->get();
+        return $query->result_array();
+    }
+
+
+    public function get_all_visited_meetings($params)
+    {
+        $this->db->select('*, parent.usrUserName parentName, user.usrUserName userName');
+        $this->db->from('meetings');
+        $this->db->like('mtnParentPath', $params['usrParentPath'], 'after');
+        $this->db->join('customers', 'customers.cusId = meetings.mtnCustomerId');
+        $this->db->join('users as user', 'user.usrId = meetings.mtnUserId');
+        $this->db->join('users as parent', 'parent.usrId = meetings.mtnParentId');
+        $this->db->where('meetings.mtnUserId',$params['usrId']);
+        $this->db->where('meetings.mtnVisited','yes');
+        $this->db->where('meetings.mtnCompleted','no');
+        $this->db->order_by('meetings.mtnDate asc, meetings.mtnTime asc');
+        $query=$this->db->get();
+        return $query->result_array();
+    }
+
+
+    public function check_meeting_data($params)
+    {
+        $this->db->where('mtnId',$params['mtnId']);
+        $query=$this->db->get('meetings');
+        $c=$query->num_rows(); 
+        if($c>0){
+            return true;
+        }
+        else{
+            return false; 
+        }
+    }
+
+
+    public function get_meeting_name_duplicate($name)
+    {
+        $this->db->where('mtnName',$name);
+        $query=$this->db->get('meetings');
+        $c=$query->num_rows(); 
+        if($c>0){
+            return true;
+        }
+        else{
+            return false; 
+        }
+    }
+
+
+    public function get_meeting_data($params)
+    {
+        $this->db->select('*');
+        $this->db->from('meetings');
+        $this->db->where('mtnId',$params['mtnId']);
+        $this->db->join('customers', 'customers.cusId = meetings.mtnCustomerId');
+        $query=$this->db->get();
+        return $query->row_array();
+    }
+
+
+    public function add_current_location($params)
+    {
+        $this->db->insert('current_locations',$params);
+        return $this->db->insert_id();
+    }
+
+
+    public function add_trip_location($params)
+    {
+        $this->db->insert('trip_locations',$params);
+        return $this->db->insert_id();
+    }
+
+
+    public function update_meeting_visited($id, $params)
+    {
+        $this->db->where('mtnId',$id);
+        $this->db->update('meetings',$params);
+    }
+
+    public function update_meeting_remarks($id, $params)
+    {
+        $this->db->where('mtnId',$id);
+        $this->db->update('meetings',$params);
+    }
+
+    public function update_meeting_completed($id, $params)
+    {
+        $this->db->where('mtnId',$id);
+        $this->db->update('meetings',$params);
+    }
+
+
+
+    public function get_customer_duplicate($params)
+    {
+        $this->db->where('cusMobileNo',$params['cusMobileNo']);
+        $query=$this->db->get('customers');
+        $c=$query->num_rows(); 
+        if($c>0){
+            return true;
+        }
+        else{
+            return false; 
+        }
+    }
+
+
+    public function get_update_customer_duplicate($id, $params)
+    {
+        $this->db->where('cusMobileNo',$params['cusMobileNo']);
+        $this->db->where_not_in('cusId', $id);
+        $query=$this->db->get('customers');
+        $c=$query->num_rows(); 
+        if($c>0){
+            return true;
+        }
+        else{
+            return false; 
+        }
+    }
+
+
+    public function get_customer_code_duplicate($params)
+    {
+        $this->db->where('cusCode',$params['cusCode']);
+        $query=$this->db->get('customers');
+        $c=$query->num_rows(); 
+        if($c>0){
+            return true;
+        }
+        else{
+            return false; 
+        }
+    }
+
+
+    public function add_customer($params)
+    {
+        if($this->db->insert('customers', $params)) {
+            $insert_id = $this->db->insert_id();
+            $data['cusCode'] = 'ANCUS00' . $insert_id;
+            $this->db->where('cusId', $insert_id);
+            $this->db->update('customers', $data);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function add_customer_id($params)
+    {
+        if($this->db->insert('customers', $params)) {
+            $insert_id = $this->db->insert_id();
+            $data['cusCode'] = 'LN000' . $insert_id;
+            $this->db->where('cusId', $insert_id);
+            $this->db->update('customers', $data);
+            return $insert_id;
+        } else {
+            return 0;
+        }
+    }
+
+    public function update_customer($id, $params)
+    {
+        $this->db->where('cusId',$id);
+        $this->db->update('customers',$params);
+    }
+
+
+    public function add_meeting($params)
+    {
+        if($this->db->insert('meetings', $params)) {
+            $insert_id = $this->db->insert_id();
+            $data['mtnCode'] = 'LNMTN00' . $insert_id;
+            $this->db->where('mtnId', $insert_id);
+            $this->db->update('meetings', $data);
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+
+    public function add_start_trip_record($params)
+    {
+        $this->db->insert('trip_records',$params);
+        return $this->db->insert_id();
+    }
+
+    public function update_stop_trip_record($id, $params)
+    {
+        $this->db->where('trpId',$id);
+        $this->db->update('trip_records',$params);
+    }
+
+
+    public function update_user_current_location($id, $params)
+    {
+        $this->db->where('usrId',$id);
+        $this->db->update('users',$params);
+    }
+
+    public function update_last_visited_meeting($id, $params)
+    {
+        $this->db->where('usrId',$id);
+        $this->db->update('users',$params);
+    }
+
+
+    public function update_logout_record($id, $params)
+    {
+        $this->db->where('lgnrId',$id);
+        $this->db->update('login_records',$params);
+    }
+
+
+    public function get_all_customers($parent_path)
+    {
+        $this->db->select('*');
+        $this->db->from('customers');
+        $this->db->join('users', 'users.usrId = customers.cusParentId');
+        $this->db->like('customers.cusParentPath', $parent_path, 'after');
+        $query=$this->db->get();
+        return $query->result_array();
+    }
+
+    public function get_customer_data($params)
+    {
+        return $this->db->get_where('customers',$params)->row_array();
+    }
+
+
+    public function get_customer_meetings($id)
+    {
+        $this->db->select('*, parent.usrUserName parentName, user.usrUserName userName');
+        $this->db->from('meetings');
+        $this->db->join('customers', 'customers.cusId = meetings.mtnCustomerId');
+        $this->db->join('users as user', 'user.usrId = meetings.mtnUserId');
+        $this->db->join('users as parent', 'parent.usrId = meetings.mtnParentId');
+        $this->db->where('meetings.mtnCustomerId',$id);
+        $query=$this->db->get();
+        return $query->result_array();
+    }
+
+    public function get_customer_completed_meetings($id)
+    {
+        $this->db->select('*, parent.usrUserName parentName, user.usrUserName userName');
+        $this->db->from('meetings');
+        $this->db->join('customers', 'customers.cusId = meetings.mtnCustomerId');
+        $this->db->join('users as user', 'user.usrId = meetings.mtnUserId');
+        $this->db->join('users as parent', 'parent.usrId = meetings.mtnParentId');
+        $this->db->where('meetings.mtnCustomerId',$id);
+        $this->db->where('meetings.mtnCompleted','yes');
+        $query=$this->db->get();
+        return $query->result_array();
+    }
+
+
+    public function add_expense($params)
+    {
+        $this->db->insert('expenses',$params);
+        return $this->db->insert_id();
+    }
+
+    public function get_expenses($params)
+    {
+        $this->db->select('*');
+        $this->db->from('expenses');
+        $this->db->where('expParentId',$params['usrId']);
+        $this->db->where('expCompleted','no');
+        $this->db->order_by('expDate desc');
+        $query=$this->db->get();
+        return $query->result_array();
+    }
+
+    public function get_expenses_with_meeting($params)
+    {
+        $this->db->select('*');
+        $this->db->from('expenses');
+        $this->db->join('meetings', 'meetings.mtnId = expenses.expMeetingId');
+        $this->db->where('expParentId',$params['usrId']);
+        $query=$this->db->get();
+        return $query->result_array();
+    }
+
+    public function delete_expense($params)
+    {
+        $this->db->where('expId',$params['expId']);
+        $this->db->delete('expenses');
+    }
+
+    public function update_expense($id, $params)
+    {
+        $this->db->where('expId',$id);
+        $this->db->update('expenses',$params);
+    }
+
+    public function update_expense_completed($id, $params)
+    {
+        $this->db->where('expId',$id);
+        $this->db->update('expenses',$params);
+    }
+
+    public function get_expense_data($params)
+    {
+        return $this->db->get_where('expenses',$params)->row_array();
+    }
+
+    public function add_leave_request($params)
+    {
+        $this->db->insert('leave_requests',$params);
+        return $this->db->insert_id();
+    }
+
+    public function get_leave_request($params)
+    {
+        $this->db->select('*');
+        $this->db->from('leave_requests');
+        $this->db->where('lreqParentId',$params['usrId']);
+        $query=$this->db->get();
+        return $query->result_array();
+    }
+
+    public function update_leave_request($id, $params)
+    {
+        $this->db->where('lreqId',$id);
+        $this->db->update('leave_requests',$params);
+    }
+
+    public function delete_leave_request($params)
+    {
+        $this->db->where('lreqId',$params['lreqId']);
+        $this->db->delete('leave_requests');
+    }
+
+    public function get_leave_request_data($params)
+    {
+        return $this->db->get_where('leave_requests',$params)->row_array();
+    }
+
+
+    public function get_user_login_record_by_date($userId, $fromDate, $toDate)
+    {
+        $this->db->select('*');
+        $this->db->from('login_records');
+        $this->db->join('users', 'users.usrId = login_records.lgnrUserId');
+        $this->db->where('lgnrUserId',$userId);
+        $this->db->where('lgnrLoginDate >=',$fromDate);
+        $this->db->where('lgnrLoginDate <=',$toDate);
+        $query=$this->db->get();
+        return $query->result_array();
+    }
+
+
+    public function add_order($params)
+    {
+        if($this->db->insert('orders', $params)) {
+            $insert_id = $this->db->insert_id();
+            $data['ordCode'] = 'LNORD00' . $insert_id;
+            $this->db->where('ordId', $insert_id);
+            $this->db->update('orders', $data);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+    public function get_order_name_duplicate($name)
+    {
+        $this->db->where('ordName',$name);
+        $query=$this->db->get('orders');
+        $c=$query->num_rows(); 
+        if($c>0){
+            return true;
+        }
+        else{
+            return false; 
+        }
+    }
+
+
+    public function get_update_order_name_duplicate($id, $name)
+    {
+        $this->db->where('ordName',$name);
+        $this->db->where_not_in('ordId', $id);
+        $query=$this->db->get('orders');
+        $c=$query->num_rows(); 
+        if($c>0){
+            return true;
+        }
+        else{
+            return false; 
+        }
+    }
+
+    public function get_orders($params)
+    {
+        $this->db->select('*');
+        $this->db->from('orders');
+        $this->db->join('meetings', 'meetings.mtnId = orders.ordMeetingId');
+        $this->db->join('customers', 'customers.cusId = meetings.mtnCustomerId');
+        $this->db->where('ordParentId',$params['usrId']);
+        $query=$this->db->get();
+        return $query->result_array();
+    }
+
+
+    public function update_order($id, $params)
+    {
+        $this->db->where('ordId',$id);
+        $this->db->update('orders',$params);
+    }
+
+
+    public function delete_order($params)
+    {
+        $this->db->where('ordId',$params['ordId']);
+        $this->db->delete('orders');
+    }
+
+
+    public function get_all_user_orders_by_year($year, $parent_id)
+    {
+        $this->db->select('*');
+        $this->db->from('orders');
+        $this->db->where('YEAR(created_at)',$year);
+        $this->db->where('ordParentId',$parent_id);
+        $query=$this->db->get();
+        return $query->result_array();
+    }
+
+
+    public function get_all_user_visits_by_year($year, $parent_id)
+    {
+        $this->db->select('*');
+        $this->db->from('meetings');
+        $this->db->where('YEAR(created_at)',$year);
+        $this->db->where('mtnUserId',$parent_id);
+        $this->db->where('mtnVisited','yes');
+        $query=$this->db->get();
+        return $query->result_array();
+    }
+
+
+    public function get_all_user_order_amount_by_year($year, $parent_id)
+    {
+        $this->db->select('*');
+        $this->db->from('orders');
+        $this->db->where('YEAR(created_at)',$year);
+        $this->db->where('ordParentId',$parent_id);
+        $query=$this->db->get();
+        return $query->result_array();
+    }
+
+
+    public function add_contact($params)
+    {
+        $this->db->insert('contacts',$params);
+        return $this->db->insert_id();
+    }
+
+
+    public function get_contact_no_duplicate($user_id, $name)
+    {
+        $this->db->where('cntParentId',$user_id);
+        $this->db->where('cntContactNo',$name);
+        $query=$this->db->get('contacts');
+        $c=$query->num_rows(); 
+        if($c>0){
+            return true;
+        }
+        else{
+            return false; 
+        }
+    }
+
+
+    public function get_contacts($params)
+    {
+        $this->db->select('*');
+        $this->db->from('contacts');
+        $this->db->where('cntParentId',$params['usrId']);
+        $query=$this->db->get();
+        return $query->result_array();
+    }
+
+
+    public function delete_contact($params)
+    {
+        $this->db->where('cntId',$params['cntId']);
+        $this->db->delete('contacts');
+    }
+
+
+    public function get_update_contact_no_duplicate($user_id, $id, $name)
+    {
+        $this->db->where('cntParentId',$user_id);
+        $this->db->where('cntContactNo',$name);
+        $this->db->where_not_in('cntId', $id);
+        $query=$this->db->get('contacts');
+        $c=$query->num_rows(); 
+        if($c>0){
+            return true;
+        }
+        else{
+            return false; 
+        }
+    }
+
+
+    public function update_contact($id, $params)
+    {
+        $this->db->where('cntId',$id);
+        $this->db->update('contacts',$params);
+    }
+
+
+    public function get_expense_meeting_data($mtnId)
+    {
+        $this->db->select('*');
+        $this->db->from('meetings');
+        $this->db->where('mtnId',$mtnId);
+        $this->db->join('customers', 'customers.cusId = meetings.mtnCustomerId');
+        $query=$this->db->get();
+        return $query->row_array();
+    }
+
+
+    public function check_user_password($id, $params)
+    {
+        $this->db->where('usrId',$id);
+        $this->db->where('usrPassword',$params['usrPassword']);
+        $query=$this->db->get('users');
+        $c=$query->num_rows(); 
+        if($c>0){
+            return true;
+        }
+        else{
+            return false; 
+        }
+    }
+
+
+    public function update_user_password($id, $params)
+    {
+        $this->db->where('usrId',$id);
+        $this->db->update('users',$params);
+    }
+
+
+    public function get_user_units($id)
+    {
+        $this->db->select('*');
+        $this->db->from('user_units');
+        $this->db->join('units', 'units.untId = user_units.usruUnitId');
+        $this->db->where('user_units.usruUserId',$id);
+        $query=$this->db->get();
+        return $query->result_array();
+    }
+
+    public function get_venues_by_unit($id)
+    {
+        $this->db->select('*');
+        $this->db->from('venues');
+        $this->db->join('units', 'units.untId = venues.venUnitId');
+        $this->db->where('venues.venUnitId',$id);
+        $query=$this->db->get();
+        return $query->result_array();
+    }
+
+
+    public function update_user_push_token($id, $params)
+    {
+        $this->db->where('usrId',$id);
+        $this->db->update('users',$params);
+    }
+
+}

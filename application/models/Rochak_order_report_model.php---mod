@@ -1,0 +1,442 @@
+<?php
+
+class Rochak_order_report_model extends CI_Model
+{
+    function __construct()
+    {
+        parent::__construct();
+    }
+    
+    function get_distributors()
+    {
+        $this->db->select('
+        `distributors`.`distributorId`, 
+        `distributors`.`distributorName`');
+        $this->db->from('`distributors`');
+        $this->db->join('`district_of_wb`', '`distributors`.`district` = `district_of_wb`.`districtId`');
+        $this->db->order_by('`distributors`.`distributorId`', "ASC");        
+        $query = $this->db->get();
+        $resultArray    =   $query->result_array();
+        if($query->num_rows() > 0){
+            return json_encode($resultArray);
+        }
+        else{
+            return $query->num_rows();
+        }
+    }
+    
+    function get_appusers()
+    {
+        $where  =   "`users`.`usrTypeName` = 'appuser'";
+        $this->db->select('
+        `users`.`usrId` AS id, 
+        `users`.`usrFirstName` AS firstName, 
+        `users`.`usrLastName` AS lastName');
+        $this->db->from('`users`');
+        $this->db->where($where);
+        $this->db->order_by('`users`.`usrId`', "ASC");        
+        $query = $this->db->get();
+        /*echo $this->db->last_query();
+        die();*/
+        $resultArray    =   $query->result_array();
+        if($query->num_rows() > 0){
+            return json_encode($resultArray);
+        }
+        else{
+            return $query->num_rows();
+        }
+    }
+    
+    /************************Order Report Model*************************/
+    //Report section for collection    
+    //function to get the records by selective interval dates & Quaterly as well
+    function get_order_filter_logs_web($data)
+    {        
+        $betweenClause  =   "`order_history`.`createdAt` BETWEEN '".$data['dateFrom']."' AND '".$data['dateTo']."'"; $this->db->select('
+            `users`.`usrFirstName` AS firstName, 
+            `users`.`usrLastName` AS lastName, 
+            `distributors`.`distributorName` AS distributor,
+            `package_items`.`item_name` AS item, 
+            `package_mode`.`package_name` AS package, 
+            `package_size`.`package_size_name` AS size, 
+            `order_history`.`cartQuantity` AS quantity, 
+            `order_history`.`itemPrice` AS price, 
+            `order_history`.`cartPrice` AS totalPrice, 
+            date_format(`order_history`.`createdAt`, "%d-%b-%Y") AS orderDate
+        ');
+        $this->db->from('`order_history`');
+        $this->db->join('`users`', '`users`.`usrId` = `order_history`.`salesUserId`');
+        $this->db->join('`distributors`', '`distributors`.`distributorId` = `order_history`.`distributorId`');
+        $this->db->join('`package_items`', '`package_items`.`pckg_id` = `order_history`.`cartItemId`');
+        $this->db->join('`package_size`', '`package_size`.`pckg_size_id` = `package_items`.`package_size`');
+        $this->db->join('`package_mode`', '`package_mode`.`pckg_mode_id` = `package_items`.`mode_of_package`');
+        if($data['cartItemId']){
+            $this->db->where('`order_history`.`cartItemId`',$data['cartItemId']);
+        }
+        if($data['salesUserId']){
+            $this->db->where('`order_history`.`salesUserId`',$data['salesUserId']);
+        }
+        if($data['distributorid']){
+            $this->db->where('`order_history`.`distributorId`',$data['distributorid']);
+        }
+        $this->db->where($betweenClause);
+        $this->db->order_by('`order_history`.`subOrderId`', "DESC");
+        $query  =   $this->db->get();
+        if($query->num_rows() > 0){
+            return  $query->result_array();
+        }
+        else{
+            return  false;
+        }
+    }
+    //function to get the records of current week
+    function get_order_report_current_week($data)
+    {
+        $where  =   "`order_history`.`createdAt` >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";        
+        $this->db->select('
+            `users`.`usrFirstName` AS firstName, 
+            `users`.`usrLastName` AS lastName, 
+            `distributors`.`distributorName` AS distributor,
+            `package_items`.`item_name` AS item, 
+            `package_mode`.`package_name` AS package, 
+            `package_size`.`package_size_name` AS size, 
+            `order_history`.`cartQuantity` AS quantity, 
+            `order_history`.`itemPrice` AS price, 
+            `order_history`.`cartPrice` AS totalPrice, 
+            date_format(`order_history`.`createdAt`, "%d-%b-%Y") AS orderDate
+        ');
+        $this->db->from('`order_history`');
+        $this->db->join('`users`', '`users`.`usrId` = `order_history`.`salesUserId`');
+        $this->db->join('`distributors`', '`distributors`.`distributorId` = `order_history`.`distributorId`');
+        $this->db->join('`package_items`', '`package_items`.`pckg_id` = `order_history`.`cartItemId`');
+        $this->db->join('`package_size`', '`package_size`.`pckg_size_id` = `package_items`.`package_size`');
+        $this->db->join('`package_mode`', '`package_mode`.`pckg_mode_id` = `package_items`.`mode_of_package`');
+        if($data['cartItemId']){
+            $this->db->where('`order_history`.`cartItemId`',$data['cartItemId']);
+        }
+        if($data['salesUserId']){
+            $this->db->where('`order_history`.`salesUserId`',$data['salesUserId']);
+        }
+        if($data['distributorid']){
+            $this->db->where('`order_history`.`distributorId`',$data['distributorid']);
+        }
+        $this->db->where($where);
+        $this->db->order_by('`order_history`.`subOrderId`', "DESC");
+        $query  =   $this->db->get();
+        if($query->num_rows() > 0){
+            return  $query->result_array();
+        }
+        else{
+            return  false;
+        }
+    }
+    //function to get the records of current month
+    function get_order_report_current_month($data)
+    {
+        $where  =   "`order_history`.`createdAt` between DATE_FORMAT(CURDATE() ,'%Y-%m-01') AND CURDATE()";
+        $this->db->select('
+            `users`.`usrFirstName` AS firstName, 
+            `users`.`usrLastName` AS lastName, 
+            `distributors`.`distributorName` AS distributor,
+            `package_items`.`item_name` AS item, 
+            `package_mode`.`package_name` AS package, 
+            `package_size`.`package_size_name` AS size, 
+            `order_history`.`cartQuantity` AS quantity, 
+            `order_history`.`itemPrice` AS price, 
+            `order_history`.`cartPrice` AS totalPrice, 
+            date_format(`order_history`.`createdAt`, "%d-%b-%Y") AS orderDate
+        ');
+        $this->db->from('`order_history`');
+        $this->db->join('`users`', '`users`.`usrId` = `order_history`.`salesUserId`');
+        $this->db->join('`distributors`', '`distributors`.`distributorId` = `order_history`.`distributorId`');
+        $this->db->join('`package_items`', '`package_items`.`pckg_id` = `order_history`.`cartItemId`');
+        $this->db->join('`package_size`', '`package_size`.`pckg_size_id` = `package_items`.`package_size`');
+        $this->db->join('`package_mode`', '`package_mode`.`pckg_mode_id` = `package_items`.`mode_of_package`');
+        if($data['cartItemId']){
+            $this->db->where('`order_history`.`cartItemId`',$data['cartItemId']);
+        }
+        if($data['salesUserId']){
+            $this->db->where('`order_history`.`salesUserId`',$data['salesUserId']);
+        }
+        if($data['distributorid']){
+            $this->db->where('`order_history`.`distributorId`',$data['distributorid']);
+        }
+        $this->db->where($where);
+        $this->db->order_by('`order_history`.`subOrderId`', "DESC");
+        $query  =   $this->db->get();
+        if($query->num_rows() > 0){
+            return  $query->result_array();
+        }
+        else{
+            return  false;
+        }
+    }
+    //function to get the records of current year
+    function get_order_report_current_year($data)
+    {
+        $where  =   "`order_history`.`createdAt` between DATE_FORMAT(CURDATE() ,'%Y-01-01') AND CURDATE()";
+        $this->db->select('
+            `users`.`usrFirstName` AS firstName, 
+            `users`.`usrLastName` AS lastName, 
+            `distributors`.`distributorName` AS distributor,
+            `package_items`.`item_name` AS item, 
+            `package_mode`.`package_name` AS package, 
+            `package_size`.`package_size_name` AS size, 
+            `order_history`.`cartQuantity` AS quantity, 
+            `order_history`.`itemPrice` AS price, 
+            `order_history`.`cartPrice` AS totalPrice, 
+            date_format(`order_history`.`createdAt`, "%d-%b-%Y") AS orderDate
+        ');
+        $this->db->from('`order_history`');
+        $this->db->join('`users`', '`users`.`usrId` = `order_history`.`salesUserId`');
+        $this->db->join('`distributors`', '`distributors`.`distributorId` = `order_history`.`distributorId`');
+        $this->db->join('`package_items`', '`package_items`.`pckg_id` = `order_history`.`cartItemId`');
+        $this->db->join('`package_size`', '`package_size`.`pckg_size_id` = `package_items`.`package_size`');
+        $this->db->join('`package_mode`', '`package_mode`.`pckg_mode_id` = `package_items`.`mode_of_package`');
+        if($data['cartItemId']){
+            $this->db->where('`order_history`.`cartItemId`',$data['cartItemId']);
+        }
+        if($data['salesUserId']){
+            $this->db->where('`order_history`.`salesUserId`',$data['salesUserId']);
+        }
+        if($data['distributorid']){
+            $this->db->where('`order_history`.`distributorId`',$data['distributorid']);
+        }
+        $this->db->where($where);
+        $this->db->order_by('`order_history`.`subOrderId`', "DESC");
+        $query  =   $this->db->get();
+        /*echo $this->db->last_query();
+        die();*/
+        if($query->num_rows() > 0){
+            return  $query->result_array();
+        }
+        else{
+            return  false;
+        }
+    }
+    //filter get collections records by distributor
+    /*function get_order_records_by_distributor_web($data)
+    {
+        $betweenClause  =   "`order_history`.`createdAt` BETWEEN '".$data['dateFrom']."' AND '".$data['dateTo']."'"; 
+        $this->db->select('
+            `users`.`usrFirstName` AS firstName, 
+            `users`.`usrLastName` AS lastName, 
+            `distributors`.`distributorName` AS distributor,
+            `package_items`.`item_name` AS item, 
+            `package_mode`.`package_name` AS package, 
+            `package_size`.`package_size_name` AS size, 
+            `order_history`.`cartQuantity` AS quantity, 
+            `order_history`.`itemPrice` AS price, 
+            `order_history`.`cartPrice` AS totalPrice, 
+            date_format(`order_history`.`createdAt`, "%d-%b-%Y") AS orderDate
+        ');
+        $this->db->from('`order_history`');
+        $this->db->join('`users`', '`users`.`usrId` = `order_history`.`salesUserId`');
+        $this->db->join('`distributors`', '`distributors`.`distributorId` = `order_history`.`distributorId`');
+        $this->db->join('`package_items`', '`package_items`.`pckg_id` = `order_history`.`cartItemId`');
+        $this->db->join('`package_size`', '`package_size`.`pckg_size_id` = `package_items`.`package_size`');
+        $this->db->join('`package_mode`', '`package_mode`.`pckg_mode_id` = `package_items`.`mode_of_package`');
+        $this->db->where('`order_history`.`distributorId`',$data['distributorid']);
+        if($data['dateFrom'] && $data['dateTo']){
+            $this->db->where($betweenClause);
+        }
+        $this->db->order_by('`order_history`.`subOrderId`', "DESC");
+        $query  =   $this->db->get();
+        if($query->num_rows() > 0){
+            return  $query->result_array();
+        }
+        else{
+            return  false;
+        }
+    }
+    //filter get collections records by sales person
+    function get_order_records_by_salesperson_web($data)
+    {
+        $betweenClause  =   "`order_history`.`createdAt` BETWEEN '".$data['dateFrom']."' AND '".$data['dateTo']."'";
+        $this->db->select('
+            `users`.`usrFirstName` AS firstName, 
+            `users`.`usrLastName` AS lastName, 
+            `distributors`.`distributorName` AS distributor,
+            `package_items`.`item_name` AS item, 
+            `package_mode`.`package_name` AS package, 
+            `package_size`.`package_size_name` AS size, 
+            `order_history`.`cartQuantity` AS quantity, 
+            `order_history`.`itemPrice` AS price, 
+            `order_history`.`cartPrice` AS totalPrice, 
+            date_format(`order_history`.`createdAt`, "%d-%b-%Y") AS orderDate
+        ');
+        $this->db->from('`order_history`');
+        $this->db->join('`users`', '`users`.`usrId` = `order_history`.`salesUserId`');
+        $this->db->join('`distributors`', '`distributors`.`distributorId` = `order_history`.`distributorId`');
+        $this->db->join('`package_items`', '`package_items`.`pckg_id` = `order_history`.`cartItemId`');
+        $this->db->join('`package_size`', '`package_size`.`pckg_size_id` = `package_items`.`package_size`');
+        $this->db->join('`package_mode`', '`package_mode`.`pckg_mode_id` = `package_items`.`mode_of_package`');
+        $this->db->where('`order_history`.`salesUserId`',$data['salesUserId']);
+        if($data['dateFrom'] && $data['dateTo']){
+            $this->db->where($betweenClause);
+        }
+        $this->db->order_by('`order_history`.`subOrderId`', "DESC");
+        $query  =   $this->db->get();
+        if($query->num_rows() > 0){
+            return  $query->result_array();
+        }
+        else{
+            return  false;
+        }
+    }
+    //filter get collections records by items
+    function get_order_records_by_items_web($data)
+    {
+        $betweenClause  =   "`order_history`.`createdAt` BETWEEN '".$data['dateFrom']."' AND '".$data['dateTo']."'";
+        $this->db->select('
+            `users`.`usrFirstName` AS firstName, 
+            `users`.`usrLastName` AS lastName, 
+            `distributors`.`distributorName` AS distributor,
+            `package_items`.`item_name` AS item, 
+            `package_mode`.`package_name` AS package, 
+            `package_size`.`package_size_name` AS size, 
+            `order_history`.`cartQuantity` AS quantity, 
+            `order_history`.`itemPrice` AS price, 
+            `order_history`.`cartPrice` AS totalPrice, 
+            date_format(`order_history`.`createdAt`, "%d-%b-%Y") AS orderDate
+        ');
+        $this->db->from('`order_history`');
+        $this->db->join('`users`', '`users`.`usrId` = `order_history`.`salesUserId`');
+        $this->db->join('`distributors`', '`distributors`.`distributorId` = `order_history`.`distributorId`');
+        $this->db->join('`package_items`', '`package_items`.`pckg_id` = `order_history`.`cartItemId`');
+        $this->db->join('`package_size`', '`package_size`.`pckg_size_id` = `package_items`.`package_size`');
+        $this->db->join('`package_mode`', '`package_mode`.`pckg_mode_id` = `package_items`.`mode_of_package`');
+        $this->db->where('`order_history`.`cartItemId`',$data['cartItemId']);
+        if($data['dateFrom'] && $data['dateTo']){
+            $this->db->where($betweenClause);
+        }
+        $this->db->order_by('`order_history`.`subOrderId`', "DESC");
+        $query  =   $this->db->get();
+        if($query->num_rows() > 0){
+            return  $query->result_array();
+        }
+        else{
+            return  false;
+        }
+    }
+    
+    function get_order_records_by_salesperson_distributor_web_date_range($data)
+    {
+        $betweenClause  =   "`order_history`.`createdAt` BETWEEN '".$data['dateFrom']."' AND '".$data['dateTo']."'";
+        $this->db->select('
+            `users`.`usrFirstName` AS firstName, 
+            `users`.`usrLastName` AS lastName, 
+            `distributors`.`distributorName` AS distributor,
+            `package_items`.`item_name` AS item, 
+            `package_mode`.`package_name` AS package, 
+            `package_size`.`package_size_name` AS size, 
+            `order_history`.`cartQuantity` AS quantity, 
+            `order_history`.`itemPrice` AS price, 
+            `order_history`.`cartPrice` AS totalPrice, 
+            date_format(`order_history`.`createdAt`, "%d-%b-%Y") AS orderDate
+        ');
+        $this->db->from('`order_history`');
+        $this->db->join('`users`', '`users`.`usrId` = `order_history`.`salesUserId`');
+        $this->db->join('`distributors`', '`distributors`.`distributorId` = `order_history`.`distributorId`');
+        $this->db->join('`package_items`', '`package_items`.`pckg_id` = `order_history`.`cartItemId`');
+        $this->db->join('`package_size`', '`package_size`.`pckg_size_id` = `package_items`.`package_size`');
+        $this->db->join('`package_mode`', '`package_mode`.`pckg_mode_id` = `package_items`.`mode_of_package`');
+        $this->db->where('`order_history`.`salesUserId`',$data['salesUserId']);
+        $this->db->where('`order_history`.`distributorId`',$data['distributorid']);
+        if($data['dateFrom'] && $data['dateTo']){
+            $this->db->where($betweenClause);
+        }
+        $this->db->order_by('`order_history`.`subOrderId`', "DESC");
+        $query  =   $this->db->get();
+        if($query->num_rows() > 0){
+            return  $query->result_array();
+        }
+        else{
+            return  false;
+        }
+    }
+    
+    function get_order_report_by_salesperson_distributor_items_web_date_range($data)
+    {
+        $betweenClause  =   "`order_history`.`createdAt` BETWEEN '".$data['dateFrom']."' AND '".$data['dateTo']."'";
+        $this->db->select('
+            `users`.`usrFirstName` AS firstName, 
+            `users`.`usrLastName` AS lastName, 
+            `distributors`.`distributorName` AS distributor,
+            `package_items`.`item_name` AS item, 
+            `package_mode`.`package_name` AS package, 
+            `package_size`.`package_size_name` AS size, 
+            `order_history`.`cartQuantity` AS quantity, 
+            `order_history`.`itemPrice` AS price, 
+            `order_history`.`cartPrice` AS totalPrice, 
+            date_format(`order_history`.`createdAt`, "%d-%b-%Y") AS orderDate
+        ');
+        $this->db->from('`order_history`');
+        $this->db->join('`users`', '`users`.`usrId` = `order_history`.`salesUserId`');
+        $this->db->join('`distributors`', '`distributors`.`distributorId` = `order_history`.`distributorId`');
+        $this->db->join('`package_items`', '`package_items`.`pckg_id` = `order_history`.`cartItemId`');
+        $this->db->join('`package_size`', '`package_size`.`pckg_size_id` = `package_items`.`package_size`');
+        $this->db->join('`package_mode`', '`package_mode`.`pckg_mode_id` = `package_items`.`mode_of_package`');
+        $this->db->where('`order_history`.`cartItemId`',$data['cartItemId']);
+        $this->db->where('`order_history`.`salesUserId`',$data['salesUserId']);
+        $this->db->where('`order_history`.`distributorId`',$data['distributorid']);
+        if($data['dateFrom'] && $data['dateTo']){
+            $this->db->where($betweenClause);
+        }
+        $this->db->order_by('`order_history`.`subOrderId`', "DESC");
+        $query  =   $this->db->get();
+        if($query->num_rows() > 0){
+            return  $query->result_array();
+        }
+        else{
+            return  false;
+        }
+    }*/
+    //filter get collections records by combinations
+    function generate_order_report($data)
+    {
+        $betweenClause  =   "`order_history`.`createdAt` BETWEEN '".$data['dateFrom']."' AND '".$data['dateTo']."'";
+        $this->db->select('
+            `users`.`usrFirstName` AS firstName, 
+            `users`.`usrLastName` AS lastName, 
+            `distributors`.`distributorName` AS distributor,
+            `package_items`.`item_name` AS item, 
+            `package_mode`.`package_name` AS package, 
+            `package_size`.`package_size_name` AS size, 
+            `order_history`.`cartQuantity` AS quantity, 
+            `order_history`.`itemPrice` AS price, 
+            `order_history`.`cartPrice` AS totalPrice, 
+            date_format(`order_history`.`createdAt`, "%d-%b-%Y") AS orderDate
+        ');
+        $this->db->from('`order_history`');
+        $this->db->join('`users`', '`users`.`usrId` = `order_history`.`salesUserId`');
+        $this->db->join('`distributors`', '`distributors`.`distributorId` = `order_history`.`distributorId`');
+        $this->db->join('`package_items`', '`package_items`.`pckg_id` = `order_history`.`cartItemId`');
+        $this->db->join('`package_size`', '`package_size`.`pckg_size_id` = `package_items`.`package_size`');
+        $this->db->join('`package_mode`', '`package_mode`.`pckg_mode_id` = `package_items`.`mode_of_package`');
+        if($data['cartItemId']){
+            $this->db->where('`order_history`.`cartItemId`',$data['cartItemId']);
+        }
+        if($data['salesUserId']){
+            $this->db->where('`order_history`.`salesUserId`',$data['salesUserId']);
+        }
+        if($data['distributorid']){
+            $this->db->where('`order_history`.`distributorId`',$data['distributorid']);
+        }
+        if($data['dateFrom'] && $data['dateTo']){
+            $this->db->where($betweenClause);
+        }
+        $this->db->order_by('`order_history`.`subOrderId`', "DESC");
+        $query  =   $this->db->get();
+        
+        /*echo $this->db->last_query();
+        die();*/
+        
+        if($query->num_rows() > 0){
+            return  $query->result_array();
+        }
+        else{
+            return  false;
+        }
+    }
+}
